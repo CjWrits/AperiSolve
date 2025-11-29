@@ -139,10 +139,10 @@ See [test_images/README.md](test_images/README.md) for details on each test imag
 - [x] Pattern detection in strings
 - [x] File signature analysis
 - [x] REST API endpoints
-- [ ] Zsteg extract / --all --> **Download `zsteg` files** such as mp3 encoded on LSB
-- [ ] Test on mobile
-- [ ] i18n
-- [ ] Rootless analyzers ?
+- [x] Zsteg extract / --all --> **Download `zsteg` files** such as mp3 encoded on LSB
+- [x] Mobile responsive design
+- [ ] i18n (internationalization)
+- [ ] Rootless analyzers
 
 ## Credits
 
