@@ -6,8 +6,10 @@ const TOOL_ORDER = [
   "outguess",
   "pngcheck",
   "steghide",
+  "password_crack",
   "zsteg",
   "strings",
+  "file_signatures",
 ];
 
 function escapeHtml(text) {
@@ -287,6 +289,22 @@ function parseResult(result) {
           texarea_content += `<i class="fas fa-copy copy-icon"></i>`;
           texarea_content += `</div>`;
           analyzer.innerHTML += texarea_content;
+        }
+      }
+      
+      // Display patterns if found (for enhanced strings analyzer)
+      if ("patterns" in result[tool]) {
+        analyzer.innerHTML += `<h3>Detected Patterns</h3>`;
+        for (const [pattern_type, matches] of Object.entries(result[tool]["patterns"])) {
+          analyzer.innerHTML += `<h4>${capitalize(escapeHtml(pattern_type.replace('_', ' ')))}</h4>`;
+          analyzer.innerHTML += `<ul>`;
+          for (const match of matches.slice(0, 10)) { // Limit to 10 matches
+            analyzer.innerHTML += `<li><code>${escapeHtml(match)}</code></li>`;
+          }
+          if (matches.length > 10) {
+            analyzer.innerHTML += `<li><em>... and ${matches.length - 10} more</em></li>`;
+          }
+          analyzer.innerHTML += `</ul>`;
         }
       } else if (typeof result[tool]["output"] === "object") {
         var table_content = `<div class="table-container">`;

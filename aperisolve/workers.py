@@ -13,6 +13,8 @@ from .analyzers.steghide import analyze_steghide
 from .analyzers.strings import analyze_strings
 from .analyzers.zsteg import analyze_zsteg
 from .analyzers.pngcheck import analyze_pngcheck
+from .analyzers.password_cracker import analyze_password_crack
+from .analyzers.file_signatures import analyze_file_signatures
 from .app import app, db
 from .config import RESULT_FOLDER
 from .models import Image, Submission
@@ -53,6 +55,8 @@ def analyze_image(submission_hash: str) -> None:
                 (analyze_pngcheck, img_path, result_path),
                 (analyze_steghide, img_path, result_path, submission.password),
                 (analyze_zsteg, img_path, result_path),
+                (analyze_password_crack, img_path, result_path),
+                (analyze_file_signatures, img_path, result_path),
             ]
 
             # Deep analysis only

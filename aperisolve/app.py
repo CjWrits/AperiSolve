@@ -223,6 +223,145 @@ def download_output(hash_val: str, tool: str) -> Response:
     return send_file(output_file, as_attachment=True)
 
 
+@app.route("/api/v1/analyze", methods=["POST"])
+def api_analyze_image() -> tuple[Response, int]:
+    """REST API endpoint for programmatic image analysis."""
+    
+    cleanup_old_entries()
+    
+    if "image" not in request.files:
+        return jsonify({"error": "No image provided"}), 400
+    
+    image = request.files["image"]
+    password = request.form.get("password")
+    deep_analysis = request.form.get("deep", "false").lower() == "true"
+    webhook_url = request.form.get("webhook_url")  # Optional webhook for completion
+    
+    if image.filename is None or image.filename == "":
+        return jsonify({"error": "No image provided"}), 400
+    
+    if (
+        "." not in image.filename
+        or Path(image.filename).suffix.lower() not in IMAGE_EXTENSIONS
+    ):
+        return jsonify({"error": "Unsupported file type"}), 400
+    
+    # Process same as regular upload but return JSON
+    image_data = image.read()
+    img_hash = hashlib.md5(image_data).hexdigest()
+    image_name = img_hash + "." + image.filename.rsplit(".", maxsplit=1)[-1].lower()
+    
+    submission_data = (
+        image_data
+        + image.filename.encode()
+        + (password.encode() if password else b"")
+        + (b"deep_analysis" if deep_analysis else b"")
+    )
+    submission_hash = hashlib.md5(submission_data).hexdigest()
+    submission_path = RESULT_FOLDER / img_hash / submission_hash
+    
+    # Check if already exists
+    if submission_path.exists():
+        submission = Submission.query.filter_by(hash=submission_hash).first()
+        return jsonify({
+            "submission_hash": submission.hash,
+            "status": submission.status,
+            "api_endpoints": {
+                "status": f"/api/v1/status/{submission.hash}",
+                "result": f"/api/v1/result/{submission.hash}"
+            }
+        }), 200
+    
+    # Create new submission (same logic as upload)
+    new_img_path = RESULT_FOLDER / img_hash / image_name
+    if not new_img_path.parent.exists():
+        new_img_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(new_img_path, "wb") as f:
+            f.write(image_data)
+        
+        new_img = Image(
+            file=str(new_img_path),
+            hash=img_hash,
+            size=len(image_data),
+            upload_count=0,
+            first_submission_date=datetime.now(timezone.utc),
+            last_submission_date=datetime.now(timezone.utc),
+        )
+        db.session.add(new_img)
+        db.session.commit()
+    
+    sub_img = Image.query.filter_by(hash=img_hash).first()
+    sub_img.upload_count += 1
+    db.session.commit()
+    
+    submission_path.mkdir(parents=True, exist_ok=True)
+    submission = Submission(
+        filename=image.filename,
+        password=password,
+        deep_analysis=deep_analysis,
+        hash=submission_hash,
+        status="pending",
+        date=time.time(),
+        image_hash=sub_img.hash,
+    )
+    db.session.add(submission)
+    db.session.commit()
+    
+    # Store webhook URL if provided
+    if webhook_url:
+        # Store in submission metadata (you'd need to add this field)
+        pass
+    
+    queue.enqueue("aperisolve.workers.analyze_image", submission.hash, job_timeout=300)
+    
+    return jsonify({
+        "submission_hash": submission.hash,
+        "status": "pending",
+        "api_endpoints": {
+            "status": f"/api/v1/status/{submission.hash}",
+            "result": f"/api/v1/result/{submission.hash}"
+        }
+    }), 202
+
+
+@app.route("/api/v1/status/<hash_val>", methods=["GET"])
+def api_get_status(hash_val: str) -> Response:
+    """API endpoint to get submission status."""
+    submission = Submission.query.get_or_404(hash_val)
+    return jsonify({
+        "submission_hash": hash_val,
+        "status": submission.status,
+        "filename": submission.filename,
+        "deep_analysis": submission.deep_analysis
+    })
+
+
+@app.route("/api/v1/result/<hash_val>", methods=["GET"])
+def api_get_result(hash_val: str) -> tuple[Response, int]:
+    """API endpoint to get analysis results."""
+    submission = Submission.query.get_or_404(hash_val)
+    image = Image.query.get_or_404(submission.image_hash)
+    
+    result_path = RESULT_FOLDER / str(image.hash) / str(submission.hash) / "results.json"
+    
+    if not result_path.exists():
+        return jsonify({"error": "Results not ready yet"}), 425
+    
+    with open(result_path, "r", encoding="utf-8") as f:
+        results = json.load(f)
+    
+    return jsonify({
+        "submission_hash": hash_val,
+        "status": submission.status,
+        "results": results,
+        "metadata": {
+            "filename": submission.filename,
+            "size": image.size,
+            "upload_count": image.upload_count
+        }
+    }), 200
+
+
 @app.route("/image/<img_name>")
 @app.route("/image/<hash_val>/<img_name>")
 def get_image(
