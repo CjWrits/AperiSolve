@@ -415,3 +415,73 @@ footer a i {
 #httperror h1, #httperror h2{
     text-align: center;
 }
+
+/* ======== Mobile Responsive ======== */
+
+@media screen and (max-width: 768px) {
+    /* Stack layout on mobile */
+    #result-infos {
+        flex-direction: column;
+    }
+    
+    #result-infos > div {
+        width: 100%;
+    }
+    
+    /* Full width images on mobile */
+    .results_img {
+        width: 50%;
+    }
+    
+    .browse-images {
+        width: 50%;
+    }
+    
+    /* Larger modal image on mobile */
+    #image-modal-container img {
+        width: 90%;
+    }
+    
+    /* Adjust table font size */
+    table {
+        font-size: 0.9rem;
+    }
+    
+    th, td {
+        padding: 0.5rem;
+    }
+    
+    /* Smaller textarea on mobile */
+    .a-strings textarea {
+        height: 300px;
+    }
+    
+    /* Adjust container padding */
+    .container {
+        padding: 10px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    /* Single column images on small phones */
+    .results_img {
+        width: 100%;
+    }
+    
+    .browse-images {
+        width: 100%;
+    }
+    
+    /* Smaller headings */
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    h2 {
+        font-size: 1.3rem;
+    }
+    
+    h3 {
+        font-size: 1.1rem;
+    }
+}
