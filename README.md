@@ -1,4 +1,4 @@
-# Aperi'Solve
+# Aperi'Solve Enhanced
 
 ![CI](https://github.com/Zeecka/AperiSolve/actions/workflows/releases.yml/badge.svg)
 ![Lint](https://github.com/Zeecka/AperiSolve/actions/workflows/lint.yml/badge.svg)
@@ -8,13 +8,15 @@
 
 <p align="center"><a href="https://www.aperisolve.com"><img src="https://raw.githubusercontent.com/Zeecka/AperiSolve/main/examples/screenshot.png"/></a></p>
 
-<b>Try it now: https://www.aperisolve.com</b>
+**Enhanced fork with advanced forensic capabilities**
 
-## What is Aperi'Solve?
+<b>Original: https://www.aperisolve.com</b>
 
-Aperi'Solve is a platform which performs steganalysis on images.<br/>
+## What is Aperi'Solve Enhanced?
 
-The platform uses *layer analysis*, "*zsteg*", "*steghide*", "*outguess*", "*exiftool*", "*binwalk*", "*foremost*" and "*strings*" for deeper steganography analysis.
+Aperi'Solve Enhanced is an advanced steganography analysis platform with automated forensic capabilities.<br/>
+
+The platform uses *layer analysis*, "*zsteg*", "*steghide*", "*outguess*", "*exiftool*", "*binwalk*", "*foremost*", "*strings*", plus **automated password cracking**, **pattern detection**, **file signature analysis**, and **REST API** for deeper steganography analysis.
 
 <p align="center"><a href="https://www.aperisolve.com"><img src="https://i.imgur.com/qiR1mlT.gif"/></a></p>
  
@@ -39,13 +41,21 @@ The platform allow you to:
 - **Visualise `pngcheck` output**
 - **Visualise `strings` output**
 
+### Enhanced Features (New)
+
+- **Automated Password Cracking** - Automatically tries 30+ common passwords on steghide-protected files
+- **Pattern Detection** - Detects URLs, emails, IP addresses, crypto addresses, CTF flags, and Base64 data in strings
+- **File Signature Analysis** - Identifies embedded files by magic bytes and calculates entropy to detect encrypted/compressed data
+- **REST API** - Programmatic access via `/api/v1/analyze`, `/api/v1/status`, `/api/v1/result` endpoints
+- **Enhanced Strings Analysis** - Categorized pattern display with intelligent filtering
+
 ## Installation
 
 Even if Aperi'Solve is available at the URL https://www.aperisolve.com/, you can set-up your own instance with the following command:
 
 ```bash
-git clone https://github.com/Zeecka/AperiSolve.git
-cd aperisolve
+git clone https://github.com/CjWrits/AperiSolve.git
+cd AperiSolve
 docker compose up -d
 ```
 
@@ -92,10 +102,48 @@ Python code follows the following linters:
 
 GitHub CI will alert in case of failure.
 
+## API Usage
+
+### Analyze Image
+```bash
+curl -X POST http://localhost:5000/api/v1/analyze \
+  -F "image=@test.png" \
+  -F "password=secret" \
+  -F "deep=true"
+```
+
+### Check Status
+```bash
+curl http://localhost:5000/api/v1/status/SUBMISSION_HASH
+```
+
+### Get Results
+```bash
+curl http://localhost:5000/api/v1/result/SUBMISSION_HASH
+```
+
+## Test Images
+
+Test images with various steganography techniques are included in `test_images/` directory:
+
+```bash
+python create_test_images.py  # Generate test images
+```
+
+See [test_images/README.md](test_images/README.md) for details on each test image.
+
 ## Roadmap
 
 - [x] PngCheck
+- [x] Automated password cracking
+- [x] Pattern detection in strings
+- [x] File signature analysis
+- [x] REST API endpoints
 - [ ] Zsteg extract / --all --> **Download `zsteg` files** such as mp3 encoded on LSB
 - [ ] Test on mobile
 - [ ] i18n
 - [ ] Rootless analyzers ?
+
+## Credits
+
+This is an enhanced fork of [Zeecka/AperiSolve](https://github.com/Zeecka/AperiSolve) with additional forensic capabilities.
